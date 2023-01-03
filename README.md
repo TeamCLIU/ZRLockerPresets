@@ -19,3 +19,6 @@ A: The [Skin ID Finder](https://github.com/TeamCLIU/ZRSkinIDFinder "ZRSkinIDFind
 
 **Q: Can I get banned for using this?**<br>
 A: Probably not, but be careful.
+
+**Q: I don't see the skins I put in the preset as equipeed in my locker, did it work?**<br>
+A: Yes, it did. Your skins are going to be visible in game and after some time or restarting the game the locker should update as well.
