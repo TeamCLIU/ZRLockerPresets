@@ -4,7 +4,7 @@
 Python script that allows you to load locker presets containing your favorite combos. 
 
 ### Usage
-* Make sure you have a folder called **"presets"** in the same directory as both scripts.
+* Make sure you have a folder called **"presets"** in the same directory as the scripts.
 * Run **new.py** to generate a new preset in the **presets** folder.
 * Change up the values in the newly created json file to skin IDs of whatever skin you'd like.
 * If you don't want to go through the process of finding the IDs, you can save your current in-game locker using **save.py**.
