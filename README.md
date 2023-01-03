@@ -1,5 +1,5 @@
 
-# ZR SkinID Finder
+# ZR Locker Presets Loader
 
 Python script that allows you to load locker presets containing your favorite combos. 
 
