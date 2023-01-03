@@ -16,5 +16,5 @@ A: No, this program will only work if you have the skin you put in the preset fi
 **Q: How do I get skin IDs?**<br>
 A: The [Skin ID Finder](https://github.com/TeamCLIU/ZRSkinIDFinder "ZRSkinIDFinder") repository might be useful! Use it to get IDs just by knowing the skin's name.
 
-**Q: Can I get banned for using this?**
+**Q: Can I get banned for using this?**<br>
 A: No, you can't.
