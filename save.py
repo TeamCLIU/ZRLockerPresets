@@ -11,7 +11,7 @@ melee = winreg.QueryValueEx(key, "cosmeticSlotMeleeSkin_h3037021715")[0]
 parachute = winreg.QueryValueEx(key, "cosmeticSlotParachuteSkin_h661321818")[0]
 
 file = open(f"{os.path.realpath(os.path.dirname(__file__))}/presets/saved_preset.json", "w")
-file.writelines(['{ "outfit": ' + f'{outfit}' + ', "backpack": ' f'{backpack}' + ', "melee": ' + f'{melee}' + ', "parachute":' + f'{parachute}' + '}'])
+file.writelines(['{' + f'"outfit":{outfit},"backpack":{backpack},"melee":{melee},"parachute":{parachute}' + '}'])
 file.close()
 
 print('Preset saved as saved_preset.json')
