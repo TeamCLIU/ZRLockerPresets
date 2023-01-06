@@ -16,7 +16,7 @@ with open(f"{os.path.realpath(os.path.dirname(__file__))}/presets/{preset_choice
 key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_ALL_ACCESS)
 
 def setV(slot, value):
-    if value != -1:
+    if value >= -1:
         winreg.SetValueEx(key, slot, 0, winreg.REG_DWORD, value)
 
 # SKINS
