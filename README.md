@@ -1,7 +1,11 @@
 
 # ZR Locker Presets Loader
 
-Python scripts that allows you to load locker presets containing your favorite combos. 
+### Functions
+* Create presets to save your combos for later
+* Emotes and sprays support
+* Ability to leave slots unchanger
+* Load with just a file name
 
 ### Usage
 * Make sure you have a folder called **"presets"** in the same directory as the scripts.
