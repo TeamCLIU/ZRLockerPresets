@@ -12,6 +12,7 @@
 * Run **new.py** to generate a new preset in the **presets** folder.
 * Change up the values in the newly created json file to skin IDs of whatever skin you'd like.
 * If you don't want to go through the process of finding the IDs, you can save your current in-game locker using **save.py**.
+* Set a value to **-1** in the json preset file to let the loader function know not to change this skin and leave it as is right now.
 * Run **loader.py** and type the name of your preset file (ex. `preset.json` or `preset`, both will work). That's it.
 
 ### Q&A
