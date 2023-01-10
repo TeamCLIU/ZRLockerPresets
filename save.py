@@ -21,7 +21,7 @@ preset = {
     "backpack": backpack,
     "melee": melee,
     "parachute": parachute,
-    "emojis": [emotes[0],emotes[1],emotes[2],emotes[3],emotes[4],emotes[5]],
+    "emotes": [emotes[0],emotes[1],emotes[2],emotes[3],emotes[4],emotes[5]],
     "sprays": [sprays[0],sprays[1],sprays[2],sprays[3]]
 }
 
