@@ -1,5 +1,6 @@
 
 # ZR Locker Presets Loader
+Note: This is an alpha version of this program. Beta and Releases soon, stay tuned.
 
 ### Functions
 * Create presets to save your combos for later
