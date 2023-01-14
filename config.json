@@ -1,0 +1,5 @@
+{
+  "presets_path": "Put your presets folder path here",
+  "color_scheme": { "light": "#e8b02c", "dark": "#c4661a" },
+  "rjust": { "length": "2", "status": "1" }
+}
