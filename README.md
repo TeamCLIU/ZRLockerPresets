@@ -1,30 +1,58 @@
+# ZombsRoyale.io Locker Presets
 
-# ZR Locker Presets Loader
-Note: This is an alpha version of this program. Beta and Releases soon, stay tuned.
+Are you one of those people who change their skin after each game and ever wanted to be able to change your combo without having to pick a skin for each slot individually? Introducing: Locker Presets!
 
-### Functions
-* Create presets to save your combos for later
-* Emotes and sprays support
-* Ability to leave slots unchanger
-* Load with just a file name
+### How it works?
 
-### Usage
-* Make sure you have a folder called **"presets"** in the same directory as the scripts.
-* Run **new.py** to generate a new preset in the **presets** folder.
-* Change up the values in the newly created json file to skin IDs of whatever skin you'd like.
-* If you don't want to go through the process of finding the IDs, you can save your current in-game locker using **save.py**.
-* Set a value to **-1** in the json preset file to let the loader function know not to change this skin and leave it as is right now.
-* Run **loader.py** and type the name of your preset file (ex. `preset.json` or `preset`, both will work). That's it.
+After downloading and unzipping the zip file containg the program with 7zip or WinRAR, open to the `config.json` with any text editor you want and change the _"presets_path"_ key's value to an absolute path\* to a folder you want to keep your presets in.
+Once you're done with that you can safely run `Locker Presets.exe`. You will be greeted with a window filled with different options:
 
-### Q&A
-**Q: Will this work for skins I don't own?**<br>
-A: No, these scripts will only work if you have the skin you put in the preset file.
+#### Sidebar Options:
 
-**Q: How do I get skin IDs?**<br>
-A: The [Skin ID Finder](https://github.com/TeamCLIU/ZRSkinIDFinder "ZRSkinIDFinder") repository might be useful! Use it to get IDs just by knowing the skin's name.
+- "New" - creates a blank preset in your presets folder.
+- "Save" - saves your current in-game locker as a preset.
+- "Random" - picks a random preset from your presets folder and loads it.
+- "Discord" - opens up your browser and takes you to _[discord.com/invite/RmkzyA8GMN](https://discord.com/invite/RmkzyA8GMN)_.
+
+#### "Locker Presets" Tab:
+
+- "Entry Preset Name" - type in the name of the preset you wish to load (can be with .json suffix or without it).
+- "Load" - loads the preset with the name that is currently in the entry box.
+- "Presets Explorer" - a list of all presets in your presets folder. To scroll you must have your cursor on the scrollbar and use the scroll on your mouse. Clicking on any of the presets in the list will insert it's name in the entry box.
+
+#### Settings:
+
+- "Presets folder path" - if you want to change your presets folder, you can paste in a new path there and click save.
+- "Color scheme" - paste in hex codes (with # prefix) to customize your buttons colors.
+- "Order numbers: show zeros" - turn on/off zeros added at the start of the order numbers on the presets list.
+- "Order numbers: length" - change the goal length of the numbers.
+
+### Important notes
+
+- This project is still in beta version. You might and probably will encounter some bugs and if you do, please file an issue or DM me on Discord - creaffy#1939.
+- If you're filing an issue, please provide all the necressary information relevant to the issue.
+- When changing the _"presets_path"_ key's value inside of `config.json` do not use `\` as a directory separator. `\\` and `/` are both fine.
+- If you want a specific slot or slots in your locker not to change when loading a preset, open the preset json file that is in your presets folder and change the value of that slot from a number to `null`.
+- Expect frequent updates because as I said, it's still in beta and there's a ton of bugs waiting to be discovered and fixed.
+- Every time the game updates you're gonna have to download a new `items.json` file from this repository and replace the old one from the assets folder in your installation directory.
+- Clicking ENTER will automatically load the preset which's name is curently in the entry box.
+
+### Questions
 
 **Q: Can I get banned for using this?**<br>
-A: I'm almost sure you can't but use this at your own risk.
+A: I am almost sure you cannot but use at your own risk.
 
-**Q: I don't see the skins I put in the preset as equipped in my locker, did it work?**<br>
-A: Yes, it did. Your skins are going to be visible in game and after some time or restarting the game the locker should update as well.
+**Q: Will this work on browser?**<br>
+A: No, it won't.
+
+**Q: Is there a version for mobile devices?**<br>
+A: No, there isn't.
+
+**Q: Can I load skins that I do not own?**<br>
+A: No, you can't. You must have the skin unlocked in order for it to load in game. It will be visible in cosmetics tab but not when you hop into a game.
+
+**Q: How do I download this?**<br>
+A: From releases tab. 
+
+**Q: Why is your code so messy and chaotic and weird? wtf you're so bad**<br>
+A: Yes, I know I'm horrible.
