@@ -34,8 +34,6 @@ Once you're done with that you can safely run `Locker Presets.exe`. You will be 
 - When changing the _"presets_path"_ key's value inside of `config.json` do not use `\` as a directory separator. `\\` and `/` are both fine.
 - If you want a specific slot or slots in your locker not to change when loading a preset, open the preset json file that is in your presets folder and change the value of that slot from a number to `null`.
 - Expect frequent updates because as I said, it's still in beta and there's a ton of bugs waiting to be discovered and fixed.
-- Every time the game updates you're gonna have to download a new `items.json` file from this repository and replace the old one from the assets folder in your installation directory. - *ignore if you're using beta 1.0*
-- THE ITEMS.JSON FILE IN RELEASES IS PROBABLY OUTDATED WHICH CAN CAUSE BUGS WHEN TRYING TO LOAD NEW SKINS. PLEASE CHANGE IT FOR THE ONE THAT IS IN THIS REPOSITORY AT /assets/items.json - *ignore if you're using beta 1.0*
 - Clicking ENTER will automatically load the preset which's name is curently in the entry box.
 
 ### Questions
