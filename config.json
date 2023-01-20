@@ -1,5 +1,15 @@
 {
-  "presets_path": "Put your presets folder path here",
-  "color_scheme": { "light": "#e8b02c", "dark": "#c4661a" },
-  "rjust": { "length": "2", "status": "1" }
+  "presets_path": "put your file path here",
+  "color_scheme": {
+    "theme_colors": { "light": "#22D481", "dark": "#D94E1C" },
+    "rarity_colors": {
+      "Common": "#c1c6c9",
+      "Uncommon": "#62f077",
+      "Rare": "#5b9df5",
+      "Epic": "#a35beb",
+      "Legendary": "#f7c95c",
+      "Mythic": "#f25050",
+      "None": "#2c2c2c"
+    }
+  }
 }
