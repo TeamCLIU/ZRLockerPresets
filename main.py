@@ -1,358 +1,381 @@
-# i know my code is messy as shit but the important thing is that it works haha
-# if you know any way i could manage it better or if you want to help me with tkinter (it sucks), feel free to dm me on discord: creaffy#1939
-# version beta 1.0 || 14-1-22
-
-# IMPORTS
+# >>> IMPORTS
 import json
 import os
 import winreg
 import webbrowser
-import keyboard
 import random
 from time import *
 import tkinter as tk
 from PIL import Image, ImageTk
 import customtkinter as ctk
 
-# CONFIG.JSON LOADER
-app_config = json.load(open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json", "r"))
+# >>> USER CONFIG
+app_config = json.load(open("./config.json", "r"))
 
-# WINDOW CONFIG
-app=ctk.CTk()
-app.configure(bg="#383838")
-app.title("Locker Presets")
-app.geometry("1000x400")
-app.minsize(1000,400)
-app.maxsize(1000,400)
-app.resizable(False, False)
-app.wm_iconphoto(False, tk.PhotoImage(file='assets/icon.png'))
-
+# >>> CTK SETTINGS
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# FRAMES & CANVAS CONFIG
-main_frame = ctk.CTkFrame(master=app, height=150, width=1000, fg_color="#242424")
-presets_list_frame_outer = ctk.CTkFrame(master=app, height=250, width=400, fg_color="#242424")
-sidebar_frame = ctk.CTkFrame(master=app, height=400, width=110, fg_color="#1f1f1f")
-presets_list_canvas = ctk.CTkCanvas(master=presets_list_frame_outer, bg="#242424", highlightthickness=0)
-presets_list_canvas.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=1)
-presets_list_frame_inner = ctk.CTkFrame(master=presets_list_canvas, fg_color="#1f1f1f", bg_color="#1f1f1f")
+# >>> ACTUAL CODE
+class App(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-def reload_presets():
-    presets = sorted(os.listdir(app_config['presets_path']))
-    i = 0
-    for preset in presets:
-        i+=1
-        preset_file = json.load(open(fr"{app_config['presets_path']}\{preset}"))
-        items_file = json.load(open(f"{os.path.realpath(os.path.dirname(__file__))}/assets/items.json"))
+        '''MAIN WINDOW'''
 
-        def getItemName(slot):
-            if str(preset_file[slot]) in items_file:
-                return items_file[str(preset_file[slot])]
-            elif preset_file[slot] == None:
-                return "Null"
-            elif preset_file[slot] == 0:
-                return "Default"
+        # WINDOW SETINGS
+        self.title("Locker Presets")
+        self.geometry("650x400")
+        self.resizable(False, False)
+        self.wm_iconphoto(False, tk.PhotoImage(file='./assets/icon.png'))
+        # SIDEBAR CONFIG
+        self.sidebar_frame = ctk.CTkFrame(master=self, height=400, width=210, fg_color='#1f1f1f')
+        self.sidebar_frame.place(x=0, y=0)
+        # LOADER TAB CONFIG
+        self.loader_frame = ctk.CTkFrame(master=self, height=400, width=445)
+        self.loader_frame.place(x=210, y=0)
 
-        if app_config['rjust']['status'] == "1":
-            show_status_output = f"{str(i).rjust(int(app_config['rjust']['length']), '0')} :"
-        else:
-            show_status_output = " "
+        '''LOADER'''
 
-        ctk.CTkButton(master=presets_list_frame_inner, text=f"{show_status_output} {preset[:len(preset) - 5]}", text_color="#FFFFFF", font=("Calibri", 20, "bold"), fg_color="transparent", hover_color=app_config['color_scheme']['light'], anchor=ctk.W, corner_radius=50, command=lambda selected = f"{preset[:len(preset) - 5]}": presets_list_btn_clicked_func(selected), width=360).grid(row=i, column=1, pady=5, padx=10, sticky=ctk.W)
-        if i == len(presets):
-            ctk.CTkLabel(master=presets_list_frame_inner, text=" ").grid(row=i+1, column=0, pady=5, padx=0, sticky=ctk.W)
-def new_btn_func():
-    preset = {
-        "outfit": 0,
-        "backpack": 0,
-        "melee": 0,
-        "parachute": 0,
-        "emotes": [0,0,0,0,0,0],
-        "sprays": [0,0,0,0]
-    }
+        # STATUS LABEL
+        self.selected_label = ctk.CTkLabel(master=self.loader_frame, text="Selected Preset", text_color="#858D91", font=("Calibri", 20))
+        self.selected_label.place(x=22, y=68, anchor=tk.W)
+        # LOAD ENTRY
+        self.load_entry = ctk.CTkEntry(master=self.loader_frame, width=300, height=30, corner_radius=50, placeholder_text="Select below", font=("Calibri", 20))
+        self.load_entry.place(x=22, y=100, anchor=tk.W)
+        # LOAD BUTTON
+        self.load_button = ctk.CTkButton(master=self.loader_frame, text="Load", command=self.load_clickEvent, width=40, height=30, fg_color=app_config['color_scheme']['theme_colors']['light'], hover_color=app_config['color_scheme']['theme_colors']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
+        self.load_button.place(x=340, y=100, anchor=tk.W)
+        # RELOAD BUTTON
+        self.reload_button = ctk.CTkButton(master=self.loader_frame, text="", image=ctk.CTkImage(dark_image=Image.open("./assets/reload.png"), size=(20, 20)), command=self.reload_list, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.reload_button.place(x=345, y=30, anchor=tk.W)
+        # DELETE BUTTON
+        self.delete_button = ctk.CTkButton(master=self.loader_frame, text="", image=ctk.CTkImage(dark_image=Image.open("./assets/delete.png"), size=(20, 20)), command=self.delete_clickEvent, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.delete_button.place(x=281.7, y=30, anchor=tk.W)
+        # NEW BUTTON
+        self.new_button = ctk.CTkButton(master=self.loader_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/new.png"), size=(20, 20)), text="", command=self.new_clickEvent, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.new_button.place(x=218.4, y=30, anchor=tk.W)
+        # SAVE BUTTON
+        self.save_button = ctk.CTkButton(master=self.loader_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/save.png"), size=(20, 20)), text="", command=self.save_clickEvent, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.save_button.place(x=155.1, y=30, anchor=tk.W)
+        # RANDOM BTTON
+        self.random_button = ctk.CTkButton(master=self.loader_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/random.png"), size=(20, 20)), text="", command=self.random_clickEvent, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.random_button.place(x=91.8, y=30, anchor=tk.W)
+        # SETTINGS BUTTON
+        self.settings_button = ctk.CTkButton(master=self.loader_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/settings.png"), size=(20, 20)), text="", command=self.settings_clickEvent, width=30, height=30, fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], corner_radius=50)
+        self.settings_button.place(x=28.5, y=30, anchor=tk.W)
 
-    with open(f"{app_config['presets_path']}/new_preset.json", "w") as file:
-        file.write(json.dumps(preset))
+        '''PRESETS LIST'''
 
-    load_success_label.configure(text="Blank preset has been created", text_color="#565B5E")
-    reload_presets()
-def save_btn_func():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_READ)
+        # SCROLLBAR SETUP
+        self.list_frame_outer = ctk.CTkFrame(master=self.loader_frame, fg_color="transparent")
+        self.list_canvas = ctk.CTkCanvas(master=self.list_frame_outer, highlightthickness=0, bg="#2B2B2B")
+        self.list_canvas.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=ctk.TRUE)
+        self.list_frame_inner = ctk.CTkFrame(master=self.list_canvas, fg_color="#1f1f1f", width=370, height=265, corner_radius=20)
+        self.list_scrollbar = ctk.CTkScrollbar(master=self.list_frame_outer, orientation=ctk.VERTICAL, command=self.list_canvas.yview)
+        self.list_scrollbar.pack(side=ctk.RIGHT, fill=ctk.Y)
+        self.list_canvas.configure(yscrollcommand=self.list_scrollbar)
+        self.list_canvas.bind('<Configure>', lambda e: self.list_canvas.configure(scrollregion=self.list_canvas.bbox("all")))
+        self.list_canvas.create_window((0, 0), window=self.list_frame_inner, anchor=ctk.NW)
+        self.list_frame_outer.place(x=23, y=125)
+        # LOAD LIST
+        self.reload_list()
 
-    def getV(slot):
-        return winreg.QueryValueEx(key, slot)[0]
+        '''SIDEBAR'''
 
-    outfit = getV("cosmeticSlotOutfitSkin_h3392416802")
-    backpack = getV("cosmeticSlotBackpackSkin_h2300351525")
-    melee = getV("cosmeticSlotMeleeSkin_h3037021715")
-    parachute = getV("cosmeticSlotParachuteSkin_h661321818")
-    emotes = [getV("cosmeticSlotEmote1_h580670127"), getV("cosmeticSlotEmote2_h580670124"), getV("cosmeticSlotEmote3_h580670125"), getV("cosmeticSlotEmote4_h580670122"), getV("cosmeticSlotEmote5_h580670123"), getV("cosmeticSlotEmote6_h580670120")]
-    sprays = [getV("cosmeticSlotSpray1_h1274385104"), getV("cosmeticSlotSpray2_h1274385107"), getV("cosmeticSlotSpray3_h1274385106"), getV("cosmeticSlotSpray4_h1274385109")]
+        # SOCIAL LINKS
+        self.discord_button = ctk.CTkButton(master=self.sidebar_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/discord.png"), size=(30, 30)), text="", command=lambda social="discord": self.social_clickEvent(social), width=30, height=30, fg_color="transparent", hover_color="#1f1f1f", corner_radius=50)
+        self.discord_button.place(x=100, y=380, anchor=tk.E)
+        self.github_button = ctk.CTkButton(master=self.sidebar_frame, image=ctk.CTkImage(dark_image=Image.open("./assets/github.png"), size=(30, 30)), text="", command=lambda social="github": self.social_clickEvent(social), width=30, height=30, fg_color="transparent", hover_color="#1f1f1f", corner_radius=50)
+        self.github_button.place(x=110, y=380, anchor=tk.W)
+        # PRESET PREVIEW
+        self.preview_preset_name = ctk.CTkLabel(master=self.sidebar_frame, text="PRESET", font=("Calibri", 20, "bold"), text_color='#FFFFFF')
+        self.preview_preset_name.place(anchor=ctk.W, x=10, y=40)
+        self.preview_outfit_name = ctk.CTkLabel(master=self.sidebar_frame, text="Outfit", font=("Calibri", 15, "bold"), text_color='#e3e5e6')
+        self.preview_outfit_info = ctk.CTkLabel(master=self.sidebar_frame, text="[####] Rarity", font=("Calibri", 12.5, "bold"), text_color=app_config['color_scheme']['rarity_colors']["Common"], anchor=ctk.W)
+        self.preview_outfit_name.place(anchor=ctk.W, x=10, y=80)
+        self.preview_outfit_info.place(anchor=ctk.W, x=10, y=105)
+        self.preview_melee_name = ctk.CTkLabel(master=self.sidebar_frame, text="Melee", font=("Calibri", 15, "bold"), text_color='#e3e5e6')
+        self.preview_melee_info = ctk.CTkLabel(master=self.sidebar_frame, text="[####] Rarity", font=("Calibri", 12.5, "bold"), text_color=app_config['color_scheme']['rarity_colors']["Common"], anchor=ctk.W)
+        self.preview_melee_name.place(anchor=ctk.W, x=10, y=150)
+        self.preview_melee_info.place(anchor=ctk.W, x=10, y=175)
+        self.preview_backpack_name = ctk.CTkLabel(master=self.sidebar_frame, text="Backpack", font=("Calibri", 15, "bold"), text_color='#e3e5e6')
+        self.preview_backpack_info = ctk.CTkLabel(master=self.sidebar_frame, text="[####] Rarity", font=("Calibri", 12.5, "bold"), text_color=app_config['color_scheme']['rarity_colors']["Common"], anchor=ctk.W)
+        self.preview_backpack_name.place(anchor=ctk.W, x=10, y=220)
+        self.preview_backpack_info.place(anchor=ctk.W, x=10, y=245)
+        self.preview_parachute_name = ctk.CTkLabel(master=self.sidebar_frame, text="Parachute", font=("Calibri", 15, "bold"), text_color='#e3e5e6')
+        self.preview_parachute_info = ctk.CTkLabel(master=self.sidebar_frame, text="[####] Rarity", font=("Calibri", 12.5, "bold"), text_color=app_config['color_scheme']['rarity_colors']["Common"], anchor=ctk.W)
+        self.preview_parachute_name.place(anchor=ctk.W, x=10, y=290)
+        self.preview_parachute_info.place(anchor=ctk.W, x=10, y=315)
 
-    preset = {
-        "outfit": outfit,
-        "backpack": backpack,
-        "melee": melee,
-        "parachute": parachute,
-        "emotes": [emotes[0],emotes[1],emotes[2],emotes[3],emotes[4],emotes[5]],
-        "sprays": [sprays[0],sprays[1],sprays[2],sprays[3]]
-    }
+        '''FUNCTIONS'''
 
-    with open(f"{app_config['presets_path']}/saved_preset.json", "w") as file:
-        file.write(json.dumps(preset))
+    def reload_list(self):
+        for PRESETS_LIST_ITEM in self.list_frame_inner.winfo_children():
+            PRESETS_LIST_ITEM.destroy()
 
-    load_success_label.configure(text="Current locker has been saved", text_color="#565B5E")
-    reload_presets()
-def load_btn_func():
-    preset_choice = load_entry.get()
-    load_entry.delete(0, len(load_entry.get()))
+        PRESETS = sorted(os.listdir(app_config['presets_path']))
+        i = 0
+        for PRESET in PRESETS:
+            i += 1
+            ctk.CTkButton(master=self.list_frame_inner, text=f"{PRESET[:len(PRESET) - 5]}", text_color="#FFFFFF", font=("Calibri", 20, "bold"), fg_color="transparent", hover_color=app_config['color_scheme']['theme_colors']['dark'], anchor=ctk.W, corner_radius=50, width=350, command=lambda selected=f"{PRESET[:len(PRESET) - 5]}": self.list_item_clickEvent(selected)).grid(row=i, column=1, pady=5, padx=10, sticky=ctk.W)
+            if i == len(PRESETS): ctk.CTkLabel(master=self.list_frame_inner, text=" ").grid(row=i+1, column=0, pady=5, padx=0, sticky=ctk.W)
+            if len(PRESETS) < 7: 
+                for j in range(7-len(PRESETS)): ctk.CTkLabel(master=self.list_frame_inner, text=" ").grid(row=i+1+j, column=0, pady=5, padx=0, sticky=ctk.W)
 
-    if preset_choice.endswith('.json'):
-        preset_choice_formatted = preset_choice
-    else:
-        preset_choice_formatted = f"{preset_choice}.json"
+    def error_window(self, error:str):
+        self.reload_list()
+        error_window = ctk.CTkToplevel()
+        error_window.title("Error")
+        error_window.geometry("300x100")
+        error_window.resizable(True, False)
+        error_window.wm_iconphoto(False, tk.PhotoImage(file='./assets/icon.png'))
 
-    try:
-        file = open(f"{app_config['presets_path']}/{preset_choice_formatted}", "r")
-        preset_loaded = json.load(file)
+        error_label = ctk.CTkLabel(master=error_window, text=error, font=("Calibri", 20))
+        error_label.pack(side=ctk.TOP, fill=ctk.BOTH, expand=True)
 
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_ALL_ACCESS)
+    def delete_clickEvent(self):
+        self.reload_list()
+        SELECTED_PRESET = self.load_entry.get()
+        if os.path.exists(f"{app_config['presets_path']}/{SELECTED_PRESET}.json"):
 
-        def setV(slot, value):
-            if value != None:
-                winreg.SetValueEx(key, slot, 0, winreg.REG_DWORD, value)
+            def deletion_confirmed():
+                os.remove(f"{app_config['presets_path']}/{SELECTED_PRESET}.json")
+                self.load_entry.delete(0, len(self.load_entry.get()))
+                self.reload_list()
+                confirm_window.destroy()
+        
+            confirm_window = ctk.CTkToplevel()
+            confirm_window.title("Deletion")
+            confirm_window.geometry("300x200")
+            confirm_window.resizable(False, False)
+            confirm_window.wm_iconphoto(False, tk.PhotoImage(file='./assets/icon.png'))
+            confirm_label = ctk.CTkLabel(master=confirm_window, text=f"Confirm deletion of\n{SELECTED_PRESET}", font=("Calibri", 20))
+            confirm_label.place(x=150, y=80, anchor=ctk.CENTER)
+            confirm_button = ctk.CTkButton(master=confirm_window, text="CONFIRM", font=("Calibri", 20, "bold"), text_color="#FFFFFF", fg_color="#E53535", hover_color="#A61F1F", command=deletion_confirmed)
+            confirm_button.place(x=150, y=125, anchor=ctk.CENTER)
 
-        # SKINS
-        setV("cosmeticSlotOutfitSkin_h3392416802", preset_loaded['outfit'])
-        setV("cosmeticSlotBackpackSkin_h2300351525", preset_loaded['backpack'])
-        setV("cosmeticSlotMeleeSkin_h3037021715", preset_loaded['melee'])
-        setV("cosmeticSlotParachuteSkin_h661321818", preset_loaded['parachute'])
-        # EMOTES
-        setV("cosmeticSlotEmote1_h580670127", preset_loaded['emotes'][0])
-        setV("cosmeticSlotEmote2_h580670124", preset_loaded['emotes'][1])
-        setV("cosmeticSlotEmote3_h580670125", preset_loaded['emotes'][2])
-        setV("cosmeticSlotEmote4_h580670122", preset_loaded['emotes'][3])
-        setV("cosmeticSlotEmote5_h580670123", preset_loaded['emotes'][4])
-        setV("cosmeticSlotEmote6_h580670120", preset_loaded['emotes'][5])
-        # SPRAYS
-        setV("cosmeticSlotSpray1_h1274385104", preset_loaded['sprays'][0])
-        setV("cosmeticSlotSpray2_h1274385107", preset_loaded['sprays'][1])
-        setV("cosmeticSlotSpray3_h1274385106", preset_loaded['sprays'][2])
-        setV("cosmeticSlotSpray4_h1274385109", preset_loaded['sprays'][3])
+        else: self.error_window("You can't delete something\nthat does not exist!")
+            
+    def load_clickEvent(self):
+            self.reload_list()
+            SELECTED_PRESET = self.load_entry.get()
+            self.load_entry.delete(0, len(self.load_entry.get()))
 
-        load_success_label.configure(text="Preset has been loaded", text_color="#565B5E")
-    except FileNotFoundError:
-        load_success_label.configure(text="Preset does not exist", text_color="#565B5E")
-def discord_btn_func():
-    webbrowser.open("https://discord.gg/RmkzyA8GMN")
-def random_btn_func():
+            try:
+                with open(f"{app_config['presets_path']}/{SELECTED_PRESET}.json", "r") as PRESET_FILE:
+                    LOADED_PRESET = json.load(PRESET_FILE)
 
-    presets = os.listdir(fr"{app_config['presets_path']}/presets")
-    random_preset = presets[random.randint(0, len(presets)-1)]
-    with open(fr"{app_config['presets_path']}/presets/{random_preset}") as file:
-        preset_loaded = json.load(file)
+                self.list_item_clickEvent(SELECTED_PRESET)
 
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_ALL_ACCESS)
+                # SKINS
+                self.setKeyValue("cosmeticSlotOutfitSkin_h3392416802", LOADED_PRESET['outfit'])
+                self.setKeyValue("cosmeticSlotBackpackSkin_h2300351525", LOADED_PRESET['backpack'])
+                self.setKeyValue("cosmeticSlotMeleeSkin_h3037021715", LOADED_PRESET['melee'])
+                self.setKeyValue("cosmeticSlotParachuteSkin_h661321818", LOADED_PRESET['parachute'])
+                # EMOTES
+                self.setKeyValue("cosmeticSlotEmote1_h580670127", LOADED_PRESET['emotes'][0])
+                self.setKeyValue("cosmeticSlotEmote2_h580670124", LOADED_PRESET['emotes'][1])
+                self.setKeyValue("cosmeticSlotEmote3_h580670125", LOADED_PRESET['emotes'][2])
+                self.setKeyValue("cosmeticSlotEmote4_h580670122", LOADED_PRESET['emotes'][3])
+                self.setKeyValue("cosmeticSlotEmote5_h580670123", LOADED_PRESET['emotes'][4])
+                self.setKeyValue("cosmeticSlotEmote6_h580670120", LOADED_PRESET['emotes'][5])
+                # SPRAYS
+                self.setKeyValue("cosmeticSlotSpray1_h1274385104", LOADED_PRESET['sprays'][0])
+                self.setKeyValue("cosmeticSlotSpray2_h1274385107", LOADED_PRESET['sprays'][1])
+                self.setKeyValue("cosmeticSlotSpray3_h1274385106", LOADED_PRESET['sprays'][2])
+                self.setKeyValue("cosmeticSlotSpray4_h1274385109", LOADED_PRESET['sprays'][3])
 
-    def setV(slot, value):
-        if value != None:
-            winreg.SetValueEx(key, slot, 0, winreg.REG_DWORD, value)
+            except Exception as err:
+                self.error_window(err.args[1])
 
-    # SKINS
-    setV("cosmeticSlotOutfitSkin_h3392416802", preset_loaded['outfit'])
-    setV("cosmeticSlotBackpackSkin_h2300351525", preset_loaded['backpack'])
-    setV("cosmeticSlotMeleeSkin_h3037021715", preset_loaded['melee'])
-    setV("cosmeticSlotParachuteSkin_h661321818", preset_loaded['parachute'])
-    # EMOTES
-    setV("cosmeticSlotEmote1_h580670127", preset_loaded['emotes'][0])
-    setV("cosmeticSlotEmote2_h580670124", preset_loaded['emotes'][1])
-    setV("cosmeticSlotEmote3_h580670125", preset_loaded['emotes'][2])
-    setV("cosmeticSlotEmote4_h580670122", preset_loaded['emotes'][3])
-    setV("cosmeticSlotEmote5_h580670123", preset_loaded['emotes'][4])
-    setV("cosmeticSlotEmote6_h580670120", preset_loaded['emotes'][5])
-    # SPRAYS
-    setV("cosmeticSlotSpray1_h1274385104", preset_loaded['sprays'][0])
-    setV("cosmeticSlotSpray2_h1274385107", preset_loaded['sprays'][1])
-    setV("cosmeticSlotSpray3_h1274385106", preset_loaded['sprays'][2])
-    setV("cosmeticSlotSpray4_h1274385109", preset_loaded['sprays'][3])
+    def list_item_clickEvent(self, selected:str):
+        self.reload_list()
+        self.load_entry.delete(0, len(self.load_entry.get()))
+        self.load_entry.insert(0, selected)
 
-    load_success_label.configure(text=f"{random_preset} has been loaded", text_color="#565B5E")
-def presets_path_options_save_btn_func():
-    input = presets_path_options_entry.get()
-    presets_path_options_entry.delete(0, len(presets_path_options_entry.get()))
-    new_path = input.replace("\\", "/")
-    new_config_structure = {
-        "presets_path": new_path,
-        "color_scheme": {
-            "light": app_config['color_scheme']['light'],
-            "dark": app_config['color_scheme']['dark']
-        },
-        "rjust": {
-            "length": app_config['rjust']['length'],
-            "status": app_config['rjust']['status']
+        with open(f"{app_config['presets_path']}/{selected}.json", "r") as PRESET_FILE:
+            PRESET_DATA = json.load(PRESET_FILE)
+
+        SKINS_DATA = {
+            "outfit": self.getItemObject(PRESET_DATA['outfit']),
+            "melee": self.getItemObject(PRESET_DATA['melee']),
+            "backpack": self.getItemObject(PRESET_DATA['backpack']),
+            "parachute": self.getItemObject(PRESET_DATA['parachute'])
         }
-    }
-    with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json", "w") as new_app_config:
-        new_app_config.write(json.dumps(new_config_structure))
-def presets_list_btn_clicked_func(preset):
-    load_entry.delete(0, len(load_entry.get()))
-    load_entry.insert(0, preset)
-def color_scheme_options_save_btn_func(light, dark):
-    if light != '' and dark != '':
-        new_config_structure = {
-            "presets_path": app_config['presets_path'],
+
+        self.preview_preset_name.configure(text=selected.upper())
+
+        self.preview_outfit_name.configure(text=SKINS_DATA['outfit']['name'])
+        self.preview_melee_name.configure(text=SKINS_DATA['melee']['name'])
+        self.preview_backpack_name.configure(text=SKINS_DATA['backpack']['name'])
+        self.preview_parachute_name.configure(text=SKINS_DATA['parachute']['name'])
+
+        self.preview_outfit_info.configure(text=f"[{str(SKINS_DATA['outfit']['id']).rjust(4, '0')}] {SKINS_DATA['outfit']['rarity']} Outfit", text_color=app_config['color_scheme']['rarity_colors'][SKINS_DATA['outfit']['rarity']])
+        self.preview_melee_info.configure(text=f"[{str(SKINS_DATA['melee']['id']).rjust(4, '0')}] {SKINS_DATA['melee']['rarity']} Melee", text_color=app_config['color_scheme']['rarity_colors'][SKINS_DATA['melee']['rarity']])
+        self.preview_backpack_info.configure(text=f"[{str(SKINS_DATA['backpack']['id']).rjust(4, '0')}] {SKINS_DATA['backpack']['rarity']} Backpack", text_color=app_config['color_scheme']['rarity_colors'][SKINS_DATA['backpack']['rarity']])
+        self.preview_parachute_info.configure(text=f"[{str(SKINS_DATA['parachute']['id']).rjust(4, '0')}] {SKINS_DATA['parachute']['rarity']} Parachute", text_color=app_config['color_scheme']['rarity_colors'][SKINS_DATA['parachute']['rarity']])
+
+    def new_clickEvent(self):
+        PRESET = {
+            "outfit": None,
+            "backpack": None,
+            "melee": None,
+            "parachute": None,
+            "emotes": [None, None, None, None, None, None],
+            "sprays": [None, None, None, None]
+        }
+
+        with open(f"{app_config['presets_path']}/new_preset.json", "w") as NEW_FILE:
+            NEW_FILE.write(json.dumps(PRESET))
+            self.reload_list()
+    
+    def save_clickEvent(self):
+
+        PRESET = {
+            "outfit": self.getKeyValue("cosmeticSlotOutfitSkin_h3392416802"),
+            "backpack": self.getKeyValue("cosmeticSlotBackpackSkin_h2300351525"),
+            "melee": self.getKeyValue("cosmeticSlotMeleeSkin_h3037021715"),
+            "parachute": self.getKeyValue("cosmeticSlotParachuteSkin_h661321818"),
+            "emotes": [self.getKeyValue("cosmeticSlotEmote1_h580670127"), self.getKeyValue("cosmeticSlotEmote2_h580670124"), self.getKeyValue("cosmeticSlotEmote3_h580670125"), self.getKeyValue("cosmeticSlotEmote4_h580670122"), self.getKeyValue("cosmeticSlotEmote5_h580670123"), self.getKeyValue("cosmeticSlotEmote6_h580670120")],
+            "sprays": [self.getKeyValue("cosmeticSlotSpray1_h1274385104"), self.getKeyValue("cosmeticSlotSpray2_h1274385107"), self.getKeyValue("cosmeticSlotSpray3_h1274385106"), self.getKeyValue("cosmeticSlotSpray4_h1274385109")]
+        }
+
+        with open(f"{app_config['presets_path']}/saved_preset.json", "w") as NEW_FILE:
+            NEW_FILE.write(json.dumps(PRESET))
+            self.reload_list()
+    
+    def settings_clickEvent(self):
+        self.reload_list()
+        # WINDOW SETTINGS
+        settings_window = ctk.CTkToplevel()
+        settings_window.title("Settings")
+        settings_window.geometry("500x400")
+        settings_window.resizable(False, False)
+        settings_window.wm_iconphoto(False, tk.PhotoImage(file='./assets/icon.png'))
+
+        def presets_path_save_clickEvent():
+            ORIGINAL_INPUT = presets_path_options_entry.get()
+            presets_path_options_entry.delete(0, len(presets_path_options_entry.get()))
+            NEW_PATH = ORIGINAL_INPUT.replace("\\", "/")
+            self.editConfigFile(presets_path = NEW_PATH)
+
+        def color_scheme_save_clickEvent():
+            LIGHT_ORIGINAL_INPUT = color_scheme_light_options_entry.get()
+            DARK_ORIGINAL_INPUT = color_scheme_dark_options_entry.get()
+            color_scheme_light_options_entry.delete(0, len(color_scheme_light_options_entry.get()))
+            color_scheme_dark_options_entry.delete(0, len(color_scheme_dark_options_entry.get()))
+            if LIGHT_ORIGINAL_INPUT.startswith("#"):
+                NEW_LIGHT_COLOR = LIGHT_ORIGINAL_INPUT
+            else:
+                NEW_LIGHT_COLOR = f"#{LIGHT_ORIGINAL_INPUT}"
+            if DARK_ORIGINAL_INPUT.startswith("#"):
+                NEW_DARK_COLOR = DARK_ORIGINAL_INPUT
+            else:
+                NEW_DARK_COLOR = f"#{DARK_ORIGINAL_INPUT}"
+            self.editConfigFile(theme_colors_light=NEW_LIGHT_COLOR, theme_colors_dark=NEW_DARK_COLOR)
+
+        # PRESETS PATH
+        presets_path_options_label = ctk.CTkLabel(master=settings_window, text="Presets folder path", text_color="#FFFFFF", font=("Calibri", 20))
+        presets_path_options_label.place(x=10, y=30, anchor=ctk.W)
+
+        presets_path_options_entry = ctk.CTkEntry(master=settings_window, placeholder_text="Paste here", font=("Calibri", 20), width=390, height=30, corner_radius=50)
+        presets_path_options_entry.place(x=10, y=70, anchor=ctk.W)
+
+        presets_path_options_save_button = ctk.CTkButton(master=settings_window, text="Save", command=presets_path_save_clickEvent, width=40, fg_color=app_config['color_scheme']['theme_colors']['light'], hover_color=app_config['color_scheme']['theme_colors']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
+        presets_path_options_save_button.place(x=415, y=70, anchor=ctk.W)
+
+        # COLOR SCHEME
+        color_scheme_options_label = ctk.CTkLabel(master=settings_window, text="Color scheme", text_color="#FFFFFF", font=("Calibri", 20))
+        color_scheme_options_label.place(x=10, y=148, anchor=ctk.W)
+
+        color_scheme_restartrequired_options_label = ctk.CTkLabel(master=settings_window, text="", text_color=app_config['color_scheme']['theme_colors']['light'], font=("Calibri", 20))
+        color_scheme_restartrequired_options_label.place(x=10, y=148, anchor=ctk.W)
+
+        color_scheme_light_options_label = ctk.CTkLabel(master=settings_window, text="Light color:", text_color="#858D91", font=("Calibri", 20))
+        color_scheme_light_options_label.place(x=40, y=180, anchor=ctk.W)
+
+        color_scheme_dark_options_label = ctk.CTkLabel(master=settings_window, text="Dark color:", text_color="#858D91", font=("Calibri", 20))
+        color_scheme_dark_options_label.place(x=225, y=180, anchor=ctk.W)
+
+        color_scheme_light_options_entry = ctk.CTkEntry(master=settings_window, placeholder_text=app_config['color_scheme']['theme_colors']['light'], font=("Calibri", 20), width=160, height=30, corner_radius=50)
+        color_scheme_light_options_entry.place(x=40, y=220, anchor=ctk.W)
+
+        color_scheme_dark_options_entry = ctk.CTkEntry(master=settings_window, placeholder_text=app_config['color_scheme']['theme_colors']['dark'], font=("Calibri", 20), width=160, height=30, corner_radius=50)
+        color_scheme_dark_options_entry.place(x=225, y=220, anchor=ctk.W)
+
+        color_scheme_options_save_button = ctk.CTkButton(master=settings_window, text="Save", command=color_scheme_save_clickEvent, width=40, fg_color=app_config['color_scheme']['theme_colors']['light'], hover_color=app_config['color_scheme']['theme_colors']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
+        color_scheme_options_save_button.place(x=415, y=220, anchor=ctk.W)
+
+    def random_clickEvent(self):
+        self.reload_list()
+        PRESETS = os.listdir(fr"{app_config['presets_path']}")
+        DRAWN_PRESET = PRESETS[random.randint(0, len(PRESETS)-1)]
+
+        self.load_entry.delete(0, len(self.load_entry.get()))
+        self.load_entry.insert(0, DRAWN_PRESET[:len(DRAWN_PRESET)-5])
+
+        self.list_item_clickEvent(DRAWN_PRESET[:len(DRAWN_PRESET)-5])
+
+    def social_clickEvent(self, social:str):
+        match social:
+            case "discord": webbrowser.open("https://discord.gg/RmkzyA8GMN")
+            case "github": webbrowser.open("https://github.com/TeamCLIU/ZRLockerPresets")
+
+    def getItemObject(self, id):
+        with open("./assets/shop.json") as SHOP_API_FILE:
+            SHOP_API_DATA = json.load(SHOP_API_FILE)
+
+        match id:
+            case 0: 
+                ITEM_OBJECT = { "id": 0, "sku": "-", "name": "Default", "type": "None", "category": "None", "rarity": "Common", "cost_coins": 0, "cost_gems": 0, "is_stock": False, "can_purchase": False }
+            case 4294967294:
+                ITEM_OBJECT = { "id": 4294967294, "sku": "-", "name": "Random", "type": "None", "category": "None", "rarity": "None", "cost_coins": 0, "cost_gems": 0, "is_stock": False, "can_purchase": False }
+            case "random":
+                ITEM_OBJECT = { "id": 4294967294, "sku": "-", "name": "Random", "type": "None", "category": "None", "rarity": "None", "cost_coins": 0, "cost_gems": 0, "is_stock": False, "can_purchase": False }
+            case None:
+                ITEM_OBJECT = { "id": "None", "sku": "-", "name": "None", "type": "None", "category": "None", "rarity": "None", "cost_coins": 0, "cost_gems": 0, "is_stock": False, "can_purchase": False }
+            case _:
+                for SHOP_API_ITEM in SHOP_API_DATA['items']:
+                    if id == SHOP_API_ITEM['id']:
+                        ITEM_OBJECT = SHOP_API_ITEM
+        return ITEM_OBJECT
+
+    def setKeyValue(self, slot:str, value):
+        KEY = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_ALL_ACCESS)
+        if value == "random":
+            winreg.SetValueEx(KEY, slot, 0, winreg.REG_DWORD, 4294967294)
+        if isinstance(value, int):
+            winreg.SetValueEx(KEY, slot, 0, winreg.REG_DWORD, value)
+    
+    def getKeyValue(self, slot:str):
+        KEY = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Yang Liu\\Zombs Royale", 0, winreg.KEY_ALL_ACCESS)
+        return winreg.QueryValueEx(KEY, slot)[0]
+
+    def editConfigFile(self, presets_path = app_config['presets_path'], theme_colors_light = app_config['color_scheme']['theme_colors']['light'], theme_colors_dark = app_config['color_scheme']['theme_colors']['dark'], rarity_colors_common = app_config['color_scheme']['rarity_colors']['Common'], rarity_colors_uncommon = app_config['color_scheme']['rarity_colors']['Uncommon'], rarity_colors_rare = app_config['color_scheme']['rarity_colors']['Rare'], rarity_colors_epic = app_config['color_scheme']['rarity_colors']['Epic'], rarity_colors_legendary = app_config['color_scheme']['rarity_colors']['Legendary'], rarity_colors_mythic = app_config['color_scheme']['rarity_colors']['Mythic'], rarity_colors_none = app_config['color_scheme']['rarity_colors']['None']):
+        TEMPLATE = {
+            "presets_path": presets_path,
             "color_scheme": {
-                "light": light,
-                "dark": dark
-            },
-            "rjust": {
-                "length": app_config['rjust']['length'],
-                "status": app_config['rjust']['status']
-            }
-        }   
-        with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json", "w") as new_app_config:
-            new_app_config.write(json.dumps(new_config_structure))
-
-        color_scheme_restartrequired_options_label.configure(text="restart required")
-def rjust_show_options_toggle():
-    def edit_status(status):
-        new_config_structure = {
-            "presets_path": app_config['presets_path'],
-            "color_scheme": {
-                "light": app_config['color_scheme']['light'],
-                "dark": app_config['color_scheme']['dark'],
-            },
-            "rjust": {
-                "length": app_config['rjust']['length'],
-                "status": status
-            }
-        }   
-        with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json", "w") as new_app_config:
-            new_app_config.write(json.dumps(new_config_structure))
-
-    edit_status(rjust_show_options_switch.get())
-
-    if rjust_show_options_switch.get() == "1":
-        rjust_length_options_entry.configure(state="normal")
-        rjust_length_options_save_button.configure(state="normal")
-        rjust_length_options_entry.configure(fg_color="#38343c")
-        rjust_length_options_save_button.configure(fg_color=app_config['color_scheme']['light'])
-    elif rjust_show_options_switch.get() == "0":
-        rjust_length_options_entry.configure(state="disabled")
-        rjust_length_options_save_button.configure(state="disabled")
-        rjust_length_options_entry.configure(fg_color="#1f1f1f")
-        rjust_length_options_save_button.configure(fg_color=app_config['color_scheme']['dark'])
-
-    rjust_show_restartrequired_options_label.configure(text="restart required")
-def rjust_length_options_save_btn_func(num):
-
-    try:
-        if isinstance(int(num), int):
-            new_config_structure = {
-                "presets_path": app_config['presets_path'],
-                "color_scheme": {
-                    "light": app_config['color_scheme']['light'],
-                    "dark": app_config['color_scheme']['dark'],
+                "theme_colors": {
+                    "light": theme_colors_light,
+                    "dark": theme_colors_dark
                 },
-                "rjust": {
-                    "length": num,
-                    "status": rjust_show_options_switch.get()
+                "rarity_colors": {
+                    "Common": rarity_colors_common,
+                    "Uncommon": rarity_colors_uncommon,
+                    "Rare": rarity_colors_rare,
+                    "Epic": rarity_colors_epic,
+                    "Legendary": rarity_colors_legendary,
+                    "Mythic": rarity_colors_mythic,
+                    "None": rarity_colors_none
                 }
-            }   
-            with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json", "w") as new_app_config:
-                new_app_config.write(json.dumps(new_config_structure))
-            rjust_show_restartrequired_options_label.configure(text="restart required")
-    except ValueError:
-        print("NaN")
+            }
+        }
+        
+        with open("./config.json", "w") as CONFIG_FILE:
+            CONFIG_FILE.write(json.dumps(TEMPLATE))
 
-# DISPLAY PRESETS LIST
-reload_presets()
-
-# GITHUB REPO WATERMARK
-github_label = ctk.CTkLabel(master=app, text="github.com/TeamCLIU/ZRLockerPresets | Beta Release v1.0", text_color="#565B5E", font=("Calibri", 10))
-github_label.place(x=990, y=390, anchor=tk.E)
-
-# SIDEBAR FRAME LAYOUT CONFIG
-new_button = ctk.CTkButton(master=sidebar_frame, text="New", command=new_btn_func, width=40, height=30, fg_color="transparent", hover_color="#1f1f1f", text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
-new_button.place(x=5, y=25, anchor=tk.W)
-
-save_button = ctk.CTkButton(master=sidebar_frame, text="Save", command=save_btn_func, width=40, height=30, fg_color="transparent", hover_color="#1f1f1f", text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
-save_button.place(x=5, y=60, anchor=tk.W)
-
-random_button = ctk.CTkButton(master=sidebar_frame, text="Random", command=random_btn_func, width=40, height=30, fg_color="transparent", hover_color="#1f1f1f", text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
-random_button.place(x=5, y=95, anchor=tk.W)
-
-discord_button = ctk.CTkButton(master=sidebar_frame, text="Discord", command=discord_btn_func, width=40, height=30, fg_color="transparent", hover_color="#1f1f1f", text_color=app_config['color_scheme']['light'], font=("Calibri", 20, "bold"), corner_radius=50)
-discord_button.place(x=5, y=380, anchor=tk.W)
-
-# LOAD FUNCTION LAYOUT
-load_button = ctk.CTkButton(master=main_frame, text="Load", command=load_btn_func, width=40, height=30, fg_color=app_config['color_scheme']['light'], hover_color=app_config['color_scheme']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50)
-load_button.place(x=480, y=100, anchor=tk.CENTER)
-
-load_entry = ctk.CTkEntry(master=main_frame, width=300, height=30, corner_radius=50, placeholder_text="Enter preset name here", font=("Calibri", 20))
-load_entry.place(x=270, y=100, anchor=tk.CENTER)
-
-load_success_label = ctk.CTkLabel(master=main_frame, text="Preset to be loaded", text_color="#858D91", font=("Calibri", 20))
-load_success_label.place(x=120, y=68, anchor=tk.W)
-
-# TOPBAR FRAME LAYOUT CONFIG
-lockerpresets_title_label = ctk.CTkLabel(master=main_frame, text="Locker Presets", font=("Calibri", 25, "bold")).place(x=120, y=25, anchor=ctk.W)
-settings_title_label = ctk.CTkLabel(master=main_frame, text="Settings", font=("Calibri", 25, "bold")).place(x=570, y=25, anchor=ctk.W)
-
-# SETTINGS: PRESETS FOLDER PATH
-presets_path_options_label = ctk.CTkLabel(master=main_frame, text="Presets folder path", text_color="#858D91", font=("Calibri", 20)).place(x=570, y=68, anchor=ctk.W)
-presets_path_options_entry = ctk.CTkEntry(master=main_frame, placeholder_text="Paste here", font=("Calibri", 20), width=300, height=30, corner_radius=50)
-presets_path_options_entry.place(x=570, y=100, anchor=ctk.W)
-presets_path_options_save_button = ctk.CTkButton(master=main_frame, text="Save", command=presets_path_options_save_btn_func, width=40, fg_color=app_config['color_scheme']['light'], hover_color=app_config['color_scheme']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50).place(x=890, y=100, anchor=ctk.W)
-
-# SETTINGS: COLOR SCHEME
-color_scheme_options_label = ctk.CTkLabel(master=main_frame, text="Color scheme", text_color="#858D91", font=("Calibri", 20)).place(x=570, y=148, anchor=ctk.W)
-color_scheme_restartrequired_options_label = ctk.CTkLabel(master=main_frame, text="", text_color=app_config['color_scheme']['light'], font=("Calibri", 20))
-color_scheme_restartrequired_options_label.place(x=725, y=148, anchor=ctk.W)
-color_scheme_light_options_label = ctk.CTkLabel(master=main_frame, text="Light color:", text_color="#565B5E", font=("Calibri", 20)).place(x=610, y=180, anchor=ctk.W)
-color_scheme_dark_options_label = ctk.CTkLabel(master=main_frame, text="Dark color:", text_color="#565B5E", font=("Calibri", 20)).place(x=610, y=220, anchor=ctk.W)
-color_scheme_light_options_entry = ctk.CTkEntry(master=main_frame, placeholder_text=app_config['color_scheme']['light'], font=("Calibri", 20), width=150, height=30, corner_radius=50)
-color_scheme_light_options_entry.place(x=720, y=180, anchor=ctk.W)
-color_scheme_dark_options_entry = ctk.CTkEntry(master=main_frame, placeholder_text=app_config['color_scheme']['dark'], font=("Calibri", 20), width=150, height=30, corner_radius=50)
-color_scheme_dark_options_entry.place(x=720, y=220, anchor=ctk.W)
-color_scheme_options_save_button = ctk.CTkButton(master=main_frame, text="Save", command= lambda: color_scheme_options_save_btn_func(color_scheme_light_options_entry.get(), color_scheme_dark_options_entry.get()), width=40, fg_color=app_config['color_scheme']['light'], hover_color=app_config['color_scheme']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50).place(x=890, y=200, anchor=ctk.W)
-
-# SETTINGS: RJUST
-rjust_options_label = ctk.CTkLabel(master=main_frame, text="Order numbers", text_color="#858D91", font=("Calibri", 20)).place(x=570, y=268, anchor=ctk.W)
-rjust_show_options_label = ctk.CTkLabel(master=main_frame, text="Show zeros:", text_color="#565B5E", font=("Calibri", 20)).place(x=610, y=300, anchor=ctk.W)
-rjust_show_options_switch = ctk.CTkSwitch(master=main_frame, text="", switch_width=150, corner_radius=50, fg_color="#1f1f1f", progress_color=app_config['color_scheme']['light'], offvalue="0", onvalue="1", command=rjust_show_options_toggle)
-rjust_show_options_switch.place(x=720, y=301, anchor=ctk.W)
-rjust_length_options_label = ctk.CTkLabel(master=main_frame, text="Length:", text_color="#565B5E", font=("Calibri", 20)).place(x=610, y=340, anchor=ctk.W)
-rjust_length_options_entry = ctk.CTkEntry(master=main_frame, placeholder_text=app_config['rjust']['length'], font=("Calibri", 20), width=150, height=30, corner_radius=50)
-rjust_length_options_entry.place(x=720, y=340, anchor=ctk.W)
-rjust_length_options_save_button = ctk.CTkButton(master=main_frame, text="Save", command= lambda: rjust_length_options_save_btn_func(rjust_length_options_entry.get()), width=40, fg_color=app_config['color_scheme']['light'], hover_color=app_config['color_scheme']['dark'], text_color="#FFFFFF", font=("Calibri", 20, "bold"), corner_radius=50, text_color_disabled="#FFFFFF")
-rjust_length_options_save_button.place(x=890, y=340, anchor=ctk.W)
-
-if app_config['rjust']['status'] == "1": 
-    rjust_show_options_switch.select()
-if app_config['rjust']['status'] == "0": 
-    rjust_length_options_entry.configure(state="disabled") 
-    rjust_length_options_save_button.configure(state="disabled")
-    rjust_length_options_entry.configure(fg_color="#1f1f1f")
-    rjust_length_options_save_button.configure(fg_color=app_config['color_scheme']['dark'])
-
-rjust_show_restartrequired_options_label = ctk.CTkLabel(master=main_frame, text="", text_color=app_config['color_scheme']['light'], font=("Calibri", 20))
-rjust_show_restartrequired_options_label.place(x=725, y=268, anchor=ctk.W)
-
-# PRESETS LIST SCROLLBAR
-presets_list_scrollbar = ctk.CTkScrollbar(master=presets_list_frame_outer, orientation=ctk.VERTICAL, command=presets_list_canvas.yview)
-presets_list_scrollbar.pack(side=ctk.RIGHT, fill=ctk.Y)
-presets_list_canvas.configure(yscrollcommand=presets_list_scrollbar)
-presets_list_canvas.bind('<Configure>', lambda e: presets_list_canvas.configure(scrollregion=presets_list_canvas.bbox("all")))
-presets_list_canvas.create_window((0,0), window=presets_list_frame_inner, anchor=ctk.NW)
-
-# LOAD FRAMES
-main_frame.pack(fill=ctk.BOTH, expand=1)
-presets_list_frame_outer.place(x=120, y=150)
-sidebar_frame.place(x=0, y=0)
-
-# ENTER = LOAD
-keyboard.add_hotkey('Enter', lambda: load_btn_func())
-
-app.mainloop()
+# >>> START FUNCTION
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
